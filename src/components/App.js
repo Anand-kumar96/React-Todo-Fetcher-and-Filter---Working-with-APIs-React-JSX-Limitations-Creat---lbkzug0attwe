@@ -1,93 +1,55 @@
-import React, {useEffect, useState} from 'react'
+import React, { useState, useEffect } from 'react'
 import '../styles/App.css';
 import { Loader } from './Loader';
 import { Todo } from './Todo';
-import axios from 'axios';
 
-const apiLink = "https://jsonplaceholder.typicode.com/todos";
+const url = "https://jsonplaceholder.typicode.com/todos";
 
-const App = () => {
+const ListTodo = (props) => {
+    let { list } = props;
 
-  // const [complete, setcomplete] = useState(true);
-  const [ischecked, setischecked] = useState(true);
-  const [incomplete, setincomplete] = useState(false);
-  const [loading, setloading] = useState(false);
-  const [post, setpost] = useState([]);
-  const [get, setget] = useState([]);
-  // let first;
+    const [completedIsCheck, setCompletedIsCheck] = useState(true);
+    const [incompletedIsCheck, setIncompletedIsCheck] = useState(true);
 
-  
-  useEffect(()=>{
-    
-    async function getStoredData(){
-        const response = await axios.get(apiLink);
-        console.log(response);
-        // console.log(response.data);
-        
-        setpost(response.data.splice(0, 20));
-        // console.log(...post)
-        setloading(false);
+
+    let newList = list.filter((item) => {
+        return (completedIsCheck === true && item.completed === true) || (incompletedIsCheck === true && item.completed === false);
+    })
+
+    if (completedIsCheck === true && incompletedIsCheck === true) {
+        newList.splice(20);
     }
-    getStoredData();
-  }, [])
-  
-  function handleChange(e){
-    //  setcomplete(!complete);
+    return (
+        <div id="filter-holder">
+            <ol>
+                {newList.map((item, index) => <Todo key={index} id={item.id} title={item.title} completed={item.completed} />)}
+            </ol>
 
-    let word = e.target.value;
-    
-    // console.log(word)
-    setincomplete(!incomplete);
-    setischecked(!ischecked);
- 
-  }
+            <label htmlFor='completed-checkbox'>completed-checkbox</label>
+            <input type="checkbox" id="completed-checkbox" checked={completedIsCheck} onChange={() => setCompletedIsCheck(!completedIsCheck)} />
+            <label htmlFor='incompleted-checkbox'>incompleted-checkbox</label>
+            <input type="checkbox" id="incompleted-checkbox" checked={incompletedIsCheck} onChange={() => setIncompletedIsCheck(!incompletedIsCheck)} />
+        </div>)
+}
+const App = () => {
+    const [loding, setLoding] = useState(true);
+    const [list, setList] = useState([]);
+    const listObjFun = () => {
 
-  return (
-    <>
-      {loading && (
-        <h1>
-          <Loader />
-        </h1>
-      )}
-      { !loading && (
-        <>
-          {post
-          .map((e)=>(
-            
-            <Todo
-            
-                key = {e.id}
-                title = {e.title}
-                completed = {e.completed ? "completed" : "incomplete"}
-                onChange = {handleChange}
-                />
-            ))}
+        fetch(url)
+            .then((result) => result.json())
+            .then((json) => {
+                setList(json);
+                setLoding(false);
+            })
+    }
 
-            {/* {
-              post.filter(item => item.completed ? (setget) : (setget))
-            } */}
-            <br />
-            <br />
-              {/* <Todo id = {response.data[0].id}/> */}
-            <div id='filter-holder'>
-              <span>Show completed</span>
-                <input type="checkbox" 
-                id="completed-checkbox" 
-                checked={ischecked} 
-                value = "completed" 
-                onChange={handleChange} />
-                <br />
-                <span>Show incompleted</span>
-                <input type="checkbox" 
-                id="incompleted-checkbox" 
-                // checked={incomplete}
-                value="incompleted"
-                onChange={handleChange} /> 
-            </div>
-        </>
-      )
-      }
-    </>
-  )
-  }
+    useEffect(listObjFun, []);
+    return (
+        <div id='main'>
+            {loding ? <Loader /> : <ListTodo list={list} />}
+        </div>
+    )
+}
+
 export default App;
